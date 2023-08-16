@@ -1,19 +1,40 @@
 import os
 import logging
+import sys
+import graypy
 from dotenv import dotenv_values
 from wowipy.wowipy import WowiPy
 from datetime import datetime
 
-settings = dotenv_values(os.path.join(os.path.abspath(os.path.dirname(__file__)), '.env'))
-log_file_name = f"wowicache_{datetime.now().strftime('%Y_%m_%d')}.log"
-log_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "log", log_file_name)
 
-print(log_path)
+def handle_unhandled_exception(exc_type, exc_value, exc_traceback):
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        return
+    logger.critical("Unhandled exception", exc_info=(exc_type, exc_value, exc_traceback))
+
+
+settings = dotenv_values(os.path.join(os.path.abspath(os.path.dirname(__file__)), '.env'))
+log_method = settings.get("log_method", "file").lower()
+log_level = settings.get("log_level", "info").lower()
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s %(levelname)s %(message)s',
-                    filename=log_path,
-                    filemode='a')
+log_levels = {'debug': 10, 'info': 20, 'warning': 30, 'error': 40, 'critical': 50}
+logger.setLevel(log_levels.get(log_level, 20))
+sys.excepthook = handle_unhandled_exception
+
+if log_method == "file":
+    log_file_name = f"wowicache_{datetime.now().strftime('%Y_%m_%d')}.log"
+    log_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "log", log_file_name)
+
+    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
+                        filename=log_path,
+                        filemode='a')
+
+elif log_method == "graylog":
+    graylog_host = settings.get("graylog_host", "127.0.0.1")
+    graylog_port = int(settings.get("graylog_port", 12201))
+    handler = graypy.GELFUDPHandler(graylog_host, graylog_port)
+    logger.addHandler(handler)
 
 logger.info("Wowicache gestartet.")
 
