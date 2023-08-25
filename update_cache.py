@@ -108,7 +108,7 @@ if enable_contractors:
     logger.info(f"Schreibe Contractor-Cache in Datei {dest_file}")
     wowi.cache_to_disk(cache_type=wowi.CACHE_CONTRACTORS, file_name=dest_file)
 
-if enable_contractors:
+if enable_persons:
     logger.info("Hole Person-Cache...")
     wowi.build_person_cache()
     dest_file = os.path.join(base_path, filename_persons)
