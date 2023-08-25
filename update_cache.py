@@ -45,12 +45,14 @@ wowi_key = settings.get("wowi_key")
 
 str_en_buildings = settings.get("enable_buildings")
 str_en_contractors = settings.get("enable_contractors")
+str_en_persons = settings.get("enable_persons")
 str_en_economic_units = settings.get("enable_economic_units")
 str_en_license_agreements = settings.get("enable_license_agreements")
 str_en_use_units = settings.get("enable_use_units")
 
 filename_buildings = settings.get("filename_buildings")
 filename_contractors = settings.get("filename_contractors")
+filename_persons = settings.get("filename_persons")
 filename_economic_units = settings.get("filename_economic_units")
 filename_license_agreements = settings.get("filename_license_agreements")
 filename_use_units = settings.get("filename_use_units")
@@ -65,6 +67,11 @@ if str_en_contractors is not None and str_en_contractors.lower() == "true":
     enable_contractors = True
 else:
     enable_contractors = False
+
+if str_en_persons is not None and str_en_persons.lower() == "true":
+    enable_persons = True
+else:
+    enable_persons = False
 
 if str_en_economic_units is not None and str_en_economic_units.lower() == "true":
     enable_economic_units = True
@@ -100,6 +107,13 @@ if enable_contractors:
     dest_file = os.path.join(base_path, filename_contractors)
     logger.info(f"Schreibe Contractor-Cache in Datei {dest_file}")
     wowi.cache_to_disk(cache_type=wowi.CACHE_CONTRACTORS, file_name=dest_file)
+
+if enable_contractors:
+    logger.info("Hole Person-Cache...")
+    wowi.build_person_cache()
+    dest_file = os.path.join(base_path, filename_persons)
+    logger.info(f"Schreibe Person-Cache in Datei {dest_file}")
+    wowi.cache_to_disk(cache_type=wowi.CACHE_PERSONS, file_name=dest_file)
 
 if enable_economic_units:
     logger.info("Hole Economic-Unit-Cache...")
