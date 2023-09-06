@@ -57,6 +57,10 @@ filename_economic_units = settings.get("filename_economic_units")
 filename_license_agreements = settings.get("filename_license_agreements")
 filename_use_units = settings.get("filename_use_units")
 
+user_agent = settings.get("user_agent")
+if user_agent is None or len(user_agent.strip()) == 0:
+    user_agent = "WowiCache/1.0"
+
 
 if str_en_buildings is not None and str_en_buildings.lower() == "true":
     enable_buildings = True
@@ -90,7 +94,8 @@ else:
 
 
 wowi = WowiPy(hostname=wowi_host, user=wowi_user,
-              password=wowi_pass, api_key=wowi_key)
+              password=wowi_pass, api_key=wowi_key,
+              user_agent=user_agent)
 
 base_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "cache")
 
