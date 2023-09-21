@@ -1,6 +1,6 @@
+import sys
 import os
 import logging
-import sys
 import graypy
 from dotenv import dotenv_values
 from wowipy.wowipy import WowiPy
@@ -19,7 +19,71 @@ ENCONTRACTS = 5
 ENUSEUNITS = 6
 
 
-def cache_to_db(connection_string: str, entities: list, wowicon: WowiPy):
+def cache_to_db(settings_file: str):
+    settings = dotenv_values(settings_file)
+
+    log_method = settings.get("log_method", "file").lower()
+    log_level = settings.get("log_level", "info").lower()
+    log_file_path = settings.get("log_file_path")
+
+    logger = logging.getLogger(__name__)
+    log_levels = {'debug': 10, 'info': 20, 'warning': 30, 'error': 40, 'critical': 50}
+    logger.setLevel(log_levels.get(log_level, 20))
+
+    if log_method == "file":
+        log_file_name = f"wowicache_{datetime.now().strftime('%Y_%m_%d')}.log"
+        log_path = os.path.join(log_file_path, log_file_name)
+
+        logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
+                            filename=log_path,
+                            filemode='a')
+
+    elif log_method == "graylog":
+        graylog_host = settings.get("graylog_host", "127.0.0.1")
+        graylog_port = int(settings.get("graylog_port", 12201))
+        handler = graypy.GELFUDPHandler(graylog_host, graylog_port)
+        logger.addHandler(handler)
+
+    logger.info("cache_to_db started.")
+
+    wowi_host = settings.get("wowi_host")
+    wowi_user = settings.get("wowi_user")
+    wowi_pass = settings.get("wowi_pass")
+    wowi_key = settings.get("wowi_key")
+
+    connection_string = settings.get("db_connection_string")
+
+    str_en_buildings = settings.get("enable_buildings")
+    str_en_contractors = settings.get("enable_contractors")
+    str_en_persons = settings.get("enable_persons")
+    str_en_economic_units = settings.get("enable_economic_units")
+    str_en_license_agreements = settings.get("enable_license_agreements")
+    str_en_use_units = settings.get("enable_use_units")
+
+    user_agent = settings.get("user_agent")
+    if user_agent is None or len(user_agent.strip()) == 0:
+        user_agent = "WowiCache/1.0"
+
+    entities = []
+    if str_en_buildings is not None and str_en_buildings.lower() == "true":
+        entities.append(ENBUILDINGS)
+    if str_en_contractors is not None and str_en_contractors.lower() == "true":
+        entities.append(ENCONTRACTORS)
+    if str_en_persons is not None and str_en_persons.lower() == "true":
+        entities.append(ENPERSONS)
+    if str_en_economic_units is not None and str_en_economic_units.lower() == "true":
+        entities.append(ENECONOMICUNITS)
+    if str_en_license_agreements is not None and str_en_license_agreements.lower() == "true":
+        entities.append(ENCONTRACTS)
+    if str_en_use_units is not None and str_en_use_units.lower() == "true":
+        entities.append(ENUSEUNITS)
+
+    logger.info(f"Entities activated: {entities}")
+
+    wowicon = WowiPy(hostname=wowi_host, user=wowi_user,
+                     password=wowi_pass, api_key=wowi_key,
+                     user_agent=user_agent)
+
     engine = create_engine(connection_string, echo=False)
     Base.metadata.create_all(bind=engine)
     Session = sessionmaker(bind=engine)
@@ -81,6 +145,7 @@ def cache_to_db(connection_string: str, entities: list, wowicon: WowiPy):
                                  construction_year=entry.building.construction_year,
                                  move_in_date=move_in_date,
                                  building_type_id=entry.building.building_type.id_,
+                                 building_type_name=entry.building.building_type.name,
                                  district_id=district_id)
             session.add(new_entry)
         session.commit()
@@ -289,79 +354,9 @@ def cache_to_db(connection_string: str, entities: list, wowicon: WowiPy):
                 session.rollback()
 
 
-def handle_unhandled_exception(exc_type, exc_value, exc_traceback):
-    if issubclass(exc_type, KeyboardInterrupt):
-        sys.__excepthook__(exc_type, exc_value, exc_traceback)
-        return
-    logger.critical("Unhandled exception", exc_info=(exc_type, exc_value, exc_traceback))
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print("Missing env-File argument")
+        exit()
 
-
-settings = dotenv_values(os.path.join(os.path.abspath(os.path.dirname(__file__)), '.env'))
-log_method = settings.get("log_method", "file").lower()
-log_level = settings.get("log_level", "info").lower()
-enable_exception_catcher_str = settings.get("enable_exception_catcher")
-if enable_exception_catcher_str is None or enable_exception_catcher_str != "true":
-    enable_exception_catcher = False
-else:
-    enable_exception_catcher = True
-logger = logging.getLogger(__name__)
-log_levels = {'debug': 10, 'info': 20, 'warning': 30, 'error': 40, 'critical': 50}
-logger.setLevel(log_levels.get(log_level, 20))
-if enable_exception_catcher:
-    sys.excepthook = handle_unhandled_exception
-
-if log_method == "file":
-    log_file_name = f"wowicache_{datetime.now().strftime('%Y_%m_%d')}.log"
-    log_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "log", log_file_name)
-
-    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
-                        filename=log_path,
-                        filemode='a')
-
-elif log_method == "graylog":
-    graylog_host = settings.get("graylog_host", "127.0.0.1")
-    graylog_port = int(settings.get("graylog_port", 12201))
-    handler = graypy.GELFUDPHandler(graylog_host, graylog_port)
-    logger.addHandler(handler)
-
-logger.info("Wowicache gestartet.")
-
-wowi_host = settings.get("wowi_host")
-wowi_user = settings.get("wowi_user")
-wowi_pass = settings.get("wowi_pass")
-wowi_key = settings.get("wowi_key")
-
-db_connection = settings.get("db_connection_string")
-
-str_en_buildings = settings.get("enable_buildings")
-str_en_contractors = settings.get("enable_contractors")
-str_en_persons = settings.get("enable_persons")
-str_en_economic_units = settings.get("enable_economic_units")
-str_en_license_agreements = settings.get("enable_license_agreements")
-str_en_use_units = settings.get("enable_use_units")
-
-user_agent = settings.get("user_agent")
-if user_agent is None or len(user_agent.strip()) == 0:
-    user_agent = "WowiCache/1.0"
-
-enabled_entities = []
-if str_en_buildings is not None and str_en_buildings.lower() == "true":
-    enabled_entities.append(ENBUILDINGS)
-if str_en_contractors is not None and str_en_contractors.lower() == "true":
-    enabled_entities.append(ENCONTRACTORS)
-if str_en_persons is not None and str_en_persons.lower() == "true":
-    enabled_entities.append(ENPERSONS)
-if str_en_economic_units is not None and str_en_economic_units.lower() == "true":
-    enabled_entities.append(ENECONOMICUNITS)
-if str_en_license_agreements is not None and str_en_license_agreements.lower() == "true":
-    enabled_entities.append(ENCONTRACTS)
-if str_en_use_units is not None and str_en_use_units.lower() == "true":
-    enabled_entities.append(ENUSEUNITS)
-
-wowi = WowiPy(hostname=wowi_host, user=wowi_user,
-              password=wowi_pass, api_key=wowi_key,
-              user_agent=user_agent)
-
-cache_to_db(connection_string=db_connection, entities=enabled_entities, wowicon=wowi)
-
-logger.info("Lauf abgeschlossen.")
+    cache_to_db(sys.argv[1])

@@ -1,23 +1,17 @@
 from sqlalchemy import Column, String, Integer, ForeignKey, Date, Float, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 Base = declarative_base()
 
 
-class BuildingType(Base):
-    __tablename__ = "wowi_building_types"
-    internal_id = Column("internal_id", Integer, primary_key=True)
-    name = Column("name", String)
-
-    buildings = relationship('Building', back_populates='building_type')
-
-    def __init__(self, internal_id, name):
-        self.internal_id = internal_id
-        self.name = name
-
-    def __repr__(self):
-        return f"BuildingType {self.name} ({self.internal_id})"
+class WowiCache:
+    def __init__(self, connection_string: str):
+        engine = create_engine(connection_string, echo=False)
+        Session = sessionmaker(bind=engine)
+        self.session = Session()
 
 
 class District(Base):
@@ -89,8 +83,8 @@ class Building(Base):
     construction_year = Column("construction_year", Integer, nullable=True)
     move_in_date = Column("move_in_date", Date, nullable=True)
 
-    building_type_id = Column(Integer, ForeignKey("wowi_building_types.internal_id"))
-    building_type = relationship('BuildingType', back_populates='buildings')
+    building_type_id = Column("building_type_id", Integer)
+    building_type_name = Column("building_type_name", String)
 
     district_id = Column(Integer, ForeignKey("wowi_districts.internal_id"), nullable=True)
     district = relationship('District', back_populates='buildings')
@@ -100,7 +94,7 @@ class Building(Base):
     def __init__(self, internal_id, id_num, company_id, building_land_type, entry_date, economic_unit_id,
                  postcode, town, street, house_number, house_number_addition, country_id, country,
                  street_complete, house_number_complete, construction_year, move_in_date,
-                 building_type_id, district_id):
+                 building_type_id, building_type_name, district_id):
         self.internal_id = internal_id
         self.id_num = id_num
         self.company_id = company_id
@@ -119,6 +113,7 @@ class Building(Base):
         self.construction_year = construction_year
         self.move_in_date = move_in_date
         self.building_type_id = building_type_id
+        self.building_type_name = building_type_name
         self.district_id = district_id
 
     def __repr__(self):
