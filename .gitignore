@@ -1,6 +1,5 @@
 testing.py
-sack.db
+*.db
 .idea
 venv
 .env
-.env.example
