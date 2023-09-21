@@ -88,12 +88,19 @@ def cache_to_db(settings_file: str):
     Base.metadata.create_all(bind=engine)
     Session = sessionmaker(bind=engine)
     session = Session()
-    if 'sqlite' not in connection_string:
-        session.exceute('SET FOREIGN_KEY_CHECKS = 0;')
+
+    session.query(Contractor).delete()
+    session.query(Contract).delete()
+    session.query(Communication).delete()
+    session.query(Address).delete()
+    session.query(Person).delete()
+    session.query(UseUnit).delete()
+    session.query(Building).delete()
+    session.query(EconomicUnit).delete()
+    session.query(District).delete()
+    session.commit()
 
     if ENECONOMICUNITS in entities or ENBUILDINGS in entities:
-        session.query(District).delete()
-        session.commit()
         districts = wowicon.get_districts()
         for entry in districts:
             new_entry = District(internal_id=entry.id_,
@@ -102,8 +109,6 @@ def cache_to_db(settings_file: str):
         session.commit()
 
     if ENECONOMICUNITS in entities:
-        session.query(EconomicUnit).delete()
-        session.commit()
         economic_units = wowicon.get_economic_units(fetch_all=True)
         for entry in economic_units:
             district_id = entry.district.id_ if entry.district else None
@@ -120,8 +125,6 @@ def cache_to_db(settings_file: str):
         session.commit()
 
     if ENBUILDINGS in entities:
-        session.query(Building).delete()
-        session.commit()
         buildings = wowicon.get_building_lands(fetch_all=True)
         for entry in buildings:
             district_id = entry.building.district.id_ if entry.building.district else None
@@ -153,8 +156,6 @@ def cache_to_db(settings_file: str):
         session.commit()
 
     if ENUSEUNITS in entities:
-        session.query(UseUnit).delete()
-        session.commit()
         use_units = wowicon.get_use_units(fetch_all=True)
         for entry in use_units:
             move_in_date = datetime.strptime(str(entry.move_in_date), "%Y-%m-%d") \
@@ -218,10 +219,6 @@ def cache_to_db(settings_file: str):
         entities.append(ENPERSONS)
 
     if ENPERSONS in entities:
-        session.query(Address).delete()
-        session.query(Communication).delete()
-        session.query(Person).delete()
-        session.commit()
         persons = wowicon.get_persons(fetch_all=True)
         for entry in persons:
             valid_from = datetime.strptime(str(entry.valid_from), "%Y-%m-%d") \
@@ -298,8 +295,6 @@ def cache_to_db(settings_file: str):
         entities.append(ENCONTRACTS)
 
     if ENCONTRACTS in entities:
-        session.query(Contract).delete()
-        session.commit()
         contracts = wowicon.get_license_agreements(fetch_all=True)
         for entry in contracts:
             contract_start = datetime.strptime(str(entry.start_contract), "%Y-%m-%d") \
@@ -322,8 +317,6 @@ def cache_to_db(settings_file: str):
         session.commit()
 
     if ENCONTRACTORS in entities:
-        session.query(Contractor).delete()
-        session.commit()
         contractors = wowicon.get_contractors(fetch_all=True)
         for entry in contractors:
             # end_contract = datetime.strptime(str(entry.end_of_contract), "%Y-%m-%d") \
@@ -354,9 +347,6 @@ def cache_to_db(settings_file: str):
             except sqlalchemy.exc.IntegrityError:
                 print("Rolling back...")
                 session.rollback()
-
-    if 'sqlite' not in connection_string:
-        session.exceute('SET FOREIGN_KEY_CHECKS = 1;')
 
     session.close()
 
