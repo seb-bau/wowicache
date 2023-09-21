@@ -3,3 +3,6 @@ testing.py
 .idea
 venv
 .env
+build
+dist
+wowicache.egg-info
