@@ -1,4 +1,6 @@
-.env
-venv
-.idea/
+testing.py
 sack.db
+.idea
+venv
+.env
+.env.example
