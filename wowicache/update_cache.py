@@ -88,6 +88,8 @@ def cache_to_db(settings_file: str):
     Base.metadata.create_all(bind=engine)
     Session = sessionmaker(bind=engine)
     session = Session()
+    if 'sqlite' not in connection_string:
+        session.exceute('SET FOREIGN_KEY_CHECKS = 0;')
 
     if ENECONOMICUNITS in entities or ENBUILDINGS in entities:
         session.query(District).delete()
@@ -352,6 +354,11 @@ def cache_to_db(settings_file: str):
             except sqlalchemy.exc.IntegrityError:
                 print("Rolling back...")
                 session.rollback()
+
+    if 'sqlite' not in connection_string:
+        session.exceute('SET FOREIGN_KEY_CHECKS = 1;')
+
+    session.close()
 
 
 if __name__ == '__main__':

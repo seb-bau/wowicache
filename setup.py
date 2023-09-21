@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='wowicache',
-    version='1.0.4',
+    version='1.0.5',
     description='OPENWOWI Wowiport SQLAlchemy overlay',
     url='https://github.com/seb-bau/wowicache',
     author='Sebastian Bauhaus',
