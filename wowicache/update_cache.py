@@ -133,7 +133,7 @@ def cache_to_db(settings_file: str):
                                  building_land_type=entry.building_land_type,
                                  entry_date=entry_date,
                                  economic_unit_id=entry.economic_unit.id_,
-                                 postcode=entry.estate_address.street,
+                                 postcode=entry.estate_address.zip_,
                                  town=entry.estate_address.town,
                                  street=entry.estate_address.street,
                                  house_number=entry.estate_address.house_number,
@@ -180,7 +180,7 @@ def cache_to_db(settings_file: str):
                                 entry_date=entry_date,
                                 building_id=entry.building_land.id_,
                                 economic_unit_id=entry.economic_unit.id_,
-                                postcode=entry.estate_address.street,
+                                postcode=entry.estate_address.zip_,
                                 town=entry.estate_address.town,
                                 street=entry.estate_address.street,
                                 house_number=entry.estate_address.house_number,
@@ -263,7 +263,7 @@ def cache_to_db(settings_file: str):
                     address_type = address_entry.address_type.name if address_entry.address_type else None
 
                     new_address = Address(internal_id=address_entry.id_,
-                                          postcode=address_entry.street,
+                                          postcode=address_entry.zip_,
                                           town=address_entry.town,
                                           street=address_entry.street,
                                           house_number=address_entry.house_number,
