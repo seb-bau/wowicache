@@ -70,7 +70,7 @@ class Building(Base):
     entry_date = Column("entry_date", Date)
     economic_unit_id = Column(Integer, ForeignKey("wowi_economic_units.internal_id"))
     economic_unit = relationship('EconomicUnit', back_populates='buildings')
-    postcode = Column("postcode", String(10))
+    postcode = Column("postcode", String(30))
     town = Column("town", String(50))
     street = Column("street", String(70))
     house_number = Column("house_number", String(30))
@@ -129,7 +129,7 @@ class UseUnit(Base):
     building = relationship('Building', back_populates='use_units')
     economic_unit_id = Column(Integer, ForeignKey("wowi_economic_units.internal_id"))
     economic_unit = relationship('EconomicUnit', back_populates='use_units')
-    postcode = Column("postcode", String(16))
+    postcode = Column("postcode", String(30))
     town = Column("town", String(50))
     street = Column("street", String(100))
     house_number = Column("house_number", String(30))
@@ -210,7 +210,7 @@ class UseUnit(Base):
 class Address(Base):
     __tablename__ = "wowi_addresses"
     internal_id = Column("internal_id", Integer, primary_key=True)
-    postcode = Column("postcode", String(16))
+    postcode = Column("postcode", String(30))
     town = Column("town", String(50))
     street = Column("street", String(100), nullable=True)
     house_number = Column("house_number", String(30), nullable=True)
