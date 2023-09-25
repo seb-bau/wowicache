@@ -280,6 +280,13 @@ def cache_to_db(settings_file: str):
 
             if entry.communications is not None:
                 for comm_entry in entry.communications:
+                    type_phone = [1, 3]
+                    if comm_entry.communication_type.id_ in type_phone:
+                        if comm_entry.content is not None:
+                            comm_entry.content = comm_entry.content.replace(' ', '').strip()
+                            comm_entry.content = comm_entry.content.replace('0049', '0')
+                            comm_entry.content = comm_entry.content.replace('+49', '0')
+
                     new_comm = Communication(internal_id=comm_entry.id_,
                                              related_address_id=comm_entry.related_address_id,
                                              content=comm_entry.content,
