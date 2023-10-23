@@ -1,0 +1,26 @@
+version: '3.1'
+services:
+  db:
+    image: mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: example
+    networks:
+      - examplenet
+
+  app:
+    image: app-wowicache
+    build:
+      context: ./app
+      dockerfile: dockerfile
+    restart: unless-stopped
+    volumes:
+      - "./app:/app"
+    networks:
+      - examplenet
+    depends_on:
+      - db
+networks:
+  examplenet:
+    name: examplenet
+    external: true
