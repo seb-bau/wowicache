@@ -101,14 +101,18 @@ def cache_to_db(settings_file: str):
     session.commit()
 
     if ENECONOMICUNITS in entities or ENBUILDINGS in entities:
+        sectioncount = 0
         districts = wowicon.get_districts()
         for entry in districts:
             new_entry = District(internal_id=entry.id_,
                                  name=entry.name)
             session.add(new_entry)
+            sectioncount += 1
         session.commit()
+        logger.info(f"Added {sectioncount} districts.")
 
     if ENECONOMICUNITS in entities:
+        sectioncount = 0
         economic_units = wowicon.get_economic_units(fetch_all=True)
         for entry in economic_units:
             district_id = entry.district.id_ if entry.district else None
@@ -122,9 +126,12 @@ def cache_to_db(settings_file: str):
                                      owner_id=entry.owner.id_,
                                      district_id=district_id)
             session.add(new_entry)
+            sectioncount += 1
         session.commit()
+        logger.info(f"Added {sectioncount} economic units.")
 
     if ENBUILDINGS in entities:
+        sectioncount = 0
         buildings = wowicon.get_building_lands(fetch_all=True)
         for entry in buildings:
             district_id = entry.building.district.id_ if entry.building.district else None
@@ -153,9 +160,12 @@ def cache_to_db(settings_file: str):
                                  building_type_name=entry.building.building_type.name,
                                  district_id=district_id)
             session.add(new_entry)
+            sectioncount += 1
         session.commit()
+        logger.info(f"Added {sectioncount} buildings.")
 
     if ENUSEUNITS in entities:
+        sectioncount = 0
         use_units = wowicon.get_use_units(fetch_all=True)
         for entry in use_units:
             move_in_date = datetime.strptime(str(entry.move_in_date), "%Y-%m-%d") \
@@ -212,13 +222,16 @@ def cache_to_db(settings_file: str):
                                 floor_name=floor_name,
                                 floor_level=floor_level)
             session.add(new_entry)
+            sectioncount += 1
         session.commit()
+        logger.info(f"Added {sectioncount} use units.")
 
     # Für Contractors benötigen wir auch Personen
     if ENCONTRACTORS in entities and ENPERSONS not in entities:
         entities.append(ENPERSONS)
 
     if ENPERSONS in entities:
+        sectioncount = 0
         persons = wowicon.get_persons(fetch_all=True)
         for entry in persons:
             valid_from = datetime.strptime(str(entry.valid_from), "%Y-%m-%d") \
@@ -247,6 +260,7 @@ def cache_to_db(settings_file: str):
                                 gender_id=gender_id,
                                 gender_name=gender_name)
             session.add(new_person)
+            sectioncount += 1
 
             if entry.addresses is not None:
                 for address_entry in entry.addresses:
@@ -296,12 +310,14 @@ def cache_to_db(settings_file: str):
                                              person_id=new_person.internal_id)
                     session.add(new_comm)
         session.commit()
+        logger.info(f"Added {sectioncount} persons.")
 
     # Für Contractors brauchen wir auch Contracts
     if ENCONTRACTORS in entities and ENCONTRACTS not in entities:
         entities.append(ENCONTRACTS)
 
     if ENCONTRACTS in entities:
+        sectioncount = 0
         contracts = wowicon.get_license_agreements(fetch_all=True)
         for entry in contracts:
             contract_start = datetime.strptime(str(entry.start_contract), "%Y-%m-%d") \
@@ -321,9 +337,12 @@ def cache_to_db(settings_file: str):
                                  contract_start=contract_start,
                                  contract_end=contract_end)
             session.add(new_entry)
+            sectioncount += 1
         session.commit()
+        logger.info(f"Added {sectioncount} contracts.")
 
     if ENCONTRACTORS in entities:
+        sectioncount = 0
         contractors = wowicon.get_contractors(fetch_all=True)
         for entry in contractors:
             # end_contract = datetime.strptime(str(entry.end_of_contract), "%Y-%m-%d") \
@@ -351,11 +370,15 @@ def cache_to_db(settings_file: str):
             try:
                 session.add(new_entry)
                 session.commit()
+                sectioncount += 1
             except sqlalchemy.exc.IntegrityError:
-                print("Rolling back...")
+                logger.warning(f"Rolling back contractor")
                 session.rollback()
 
+        logger.info(f"Added {sectioncount} contractors.")
+
     session.close()
+    logger.info("Cache update complete.")
 
 
 if __name__ == '__main__':
