@@ -84,7 +84,7 @@ def cache_to_db(settings_file: str):
                      password=wowi_pass, api_key=wowi_key,
                      user_agent=user_agent)
 
-    engine = create_engine(connection_string, echo=False)
+    engine = create_engine(connection_string, echo=False, pool_pre_ping=True)
     Base.metadata.create_all(bind=engine)
     Session = sessionmaker(bind=engine)
     session = Session()

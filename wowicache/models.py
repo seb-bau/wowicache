@@ -9,7 +9,7 @@ Base = declarative_base()
 
 class WowiCache:
     def __init__(self, connection_string: str):
-        engine = create_engine(connection_string, echo=False)
+        engine = create_engine(connection_string, echo=False, pool_pre_ping=True)
         Session = sessionmaker(bind=engine)
         self.session = Session()
 
