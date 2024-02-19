@@ -30,7 +30,7 @@ setup(
         'url-normalize>=1.4.3',
         'urllib3>=2.0.4',
         'wowipy>=1.1.14',
-        'SQLAlchemy~=2.0.20'
+        'SQLAlchemy<2'
                       ],
 
     classifiers=[
