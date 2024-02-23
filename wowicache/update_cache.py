@@ -18,6 +18,15 @@ ENECONOMICUNITS = 4
 ENCONTRACTS = 5
 ENUSEUNITS = 6
 
+logger = logging.getLogger(__name__)
+
+
+def handle_unhandled_exception(exc_type, exc_value, exc_traceback):
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        return
+    logger.critical("Unhandled exception", exc_info=(exc_type, exc_value, exc_traceback))
+
 
 def cache_to_db(settings_file: str):
     settings = dotenv_values(settings_file)
@@ -26,7 +35,6 @@ def cache_to_db(settings_file: str):
     log_level = settings.get("log_level", "info").lower()
     log_file_path = settings.get("log_file_path")
 
-    logger = logging.getLogger(__name__)
     log_levels = {'debug': 10, 'info': 20, 'warning': 30, 'error': 40, 'critical': 50}
     logger.setLevel(log_levels.get(log_level, 20))
 
@@ -320,9 +328,10 @@ def cache_to_db(settings_file: str):
         sectioncount = 0
         contracts = wowicon.get_license_agreements(fetch_all=True)
         for entry in contracts:
-            contract_start = datetime.strptime(str(entry.start_contract), "%Y-%m-%d") \
+            print(str(entry.start_contract))
+            contract_start = datetime.strptime(str(entry.start_contract), "%Y-%m-%d %H:%M:%S") \
                 if entry.start_contract else None
-            contract_end = datetime.strptime(str(entry.end_of_contract), "%Y-%m-%d") \
+            contract_end = datetime.strptime(str(entry.end_of_contract), "%Y-%m-%d  %H:%M:%S") \
                 if entry.end_of_contract else None
             new_entry = Contract(internal_id=entry.id_,
                                  id_num=entry.id_num,
