@@ -28,6 +28,9 @@ def handle_unhandled_exception(exc_type, exc_value, exc_traceback):
     logger.critical("Unhandled exception", exc_info=(exc_type, exc_value, exc_traceback))
 
 
+sys.excepthook = handle_unhandled_exception
+
+
 def cache_to_db(settings_file: str):
     settings = dotenv_values(settings_file)
 
