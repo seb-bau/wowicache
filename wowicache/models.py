@@ -338,7 +338,7 @@ class Contract(Base):
     use_unit = relationship('UseUnit', back_populates='contracts')
     restriction_id = Column("restriction_id", Integer)
     restriction_name = Column("restriction_name", String(40))
-    is_vacany = Column("is_vacancy", Boolean)
+    is_vacancy = Column("is_vacancy", Boolean)
     status_id = Column("status_id", Integer)
     status_name = Column("status_name", String(30))
     life_id = Column("life_id", Integer)
@@ -354,7 +354,7 @@ class Contract(Base):
         self.use_unit_id = use_unit_id
         self.restriction_id = restriction_id
         self.restriction_name = restriction_name
-        self.is_vacany = is_vacancy
+        self.is_vacancy = is_vacancy
         self.status_id = status_id
         self.status_name = status_name
         self.life_id = life_id

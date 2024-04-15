@@ -1,7 +1,6 @@
 import sys
 import os
-import logging
-import graypy
+import log
 from dotenv import dotenv_values
 from wowipy.wowipy import WowiPy
 import sqlalchemy.exc
@@ -18,8 +17,6 @@ ENECONOMICUNITS = 4
 ENCONTRACTS = 5
 ENUSEUNITS = 6
 
-logger = logging.getLogger(__name__)
-
 
 def handle_unhandled_exception(exc_type, exc_value, exc_traceback):
     if issubclass(exc_type, KeyboardInterrupt):
@@ -28,33 +25,16 @@ def handle_unhandled_exception(exc_type, exc_value, exc_traceback):
     logger.critical("Unhandled exception", exc_info=(exc_type, exc_value, exc_traceback))
 
 
+settings_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), ".env")
+settings = dotenv_values(settings_path)
+logger = log.setup_custom_logger('root', settings.get("log_method", "file"),
+                                 settings.get("log_level", "info"),
+                                 graylog_host=settings.get("graylog_server"),
+                                 graylog_port=int(settings.get("graylog_port")))
 sys.excepthook = handle_unhandled_exception
 
 
-def cache_to_db(settings_file: str):
-    settings = dotenv_values(settings_file)
-
-    log_method = settings.get("log_method", "file").lower()
-    log_level = settings.get("log_level", "info").lower()
-    log_file_path = settings.get("log_file_path")
-
-    log_levels = {'debug': 10, 'info': 20, 'warning': 30, 'error': 40, 'critical': 50}
-    logger.setLevel(log_levels.get(log_level, 20))
-
-    if log_method == "file":
-        log_file_name = f"wowicache_{datetime.now().strftime('%Y_%m_%d')}.log"
-        log_path = os.path.join(log_file_path, log_file_name)
-
-        logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
-                            filename=log_path,
-                            filemode='a')
-
-    elif log_method == "graylog":
-        graylog_host = settings.get("graylog_host", "127.0.0.1")
-        graylog_port = int(settings.get("graylog_port", 12201))
-        handler = graypy.GELFUDPHandler(graylog_host, graylog_port)
-        logger.addHandler(handler)
-
+def cache_to_db():
     logger.info("cache_to_db started.")
 
     wowi_host = settings.get("wowi_host")
@@ -394,8 +374,4 @@ def cache_to_db(settings_file: str):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print("Missing env-File argument")
-        exit()
-
-    cache_to_db(sys.argv[1])
+    cache_to_db()
