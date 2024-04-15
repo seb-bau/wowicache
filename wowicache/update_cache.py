@@ -25,7 +25,10 @@ def handle_unhandled_exception(exc_type, exc_value, exc_traceback):
     logger.critical("Unhandled exception", exc_info=(exc_type, exc_value, exc_traceback))
 
 
-settings_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), ".env")
+if len(sys.argv) > 1:
+    settings_path = sys.argv[1]
+else:
+    settings_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), ".env")
 settings = dotenv_values(settings_path)
 logger = log.setup_custom_logger('root', settings.get("log_method", "file"),
                                  settings.get("log_level", "info"),
