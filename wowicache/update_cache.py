@@ -1,8 +1,8 @@
 import sys
 import os
-import log
 from dotenv import dotenv_values
 from wowipy.wowipy import WowiPy
+from wowicache import log
 import sqlalchemy.exc
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
