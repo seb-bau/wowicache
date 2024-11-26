@@ -4,14 +4,19 @@ import os
 from datetime import datetime
 
 
-def setup_custom_logger(name, log_method: str, log_level: str, graylog_host: str = None, graylog_port: int = None):
+def setup_custom_logger(name, log_method: str, log_level: str, graylog_host: str = None, graylog_port: int = None,
+                        log_dir: str = None):
     logger = logging.getLogger(name)
     log_levels = {'debug': 10, 'info': 20, 'warning': 30, 'error': 40, 'critical': 50}
     logger.setLevel(log_levels.get(log_level, 20))
 
     if log_method == "file":
         log_file_name = f"wowicache_{datetime.now().strftime('%Y_%m_%d')}.log"
-        log_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "log", log_file_name)
+        if not log_dir:
+            log_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), "log")
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir)
+        log_path = os.path.join(log_dir, log_file_name)
 
         logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                             filename=log_path,

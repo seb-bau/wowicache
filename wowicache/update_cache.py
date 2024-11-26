@@ -8,6 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from wowicache.models import Base, EconomicUnit, District, Building, UseUnit, Address, Communication, Person, Contract
 from wowicache.models import Contractor
+from wowicache.rescue import backup_database, restore_last_backup
 from datetime import datetime
 
 ENBUILDINGS = 1
@@ -23,6 +24,10 @@ def handle_unhandled_exception(exc_type, exc_value, exc_traceback):
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
         return
     logger.critical("Unhandled exception", exc_info=(exc_type, exc_value, exc_traceback))
+    backup_path = settings.get("backup_path")
+    connection_string = settings.get("db_connection_string")
+    restore_result = restore_last_backup(backup_path, connection_string)
+    logger.error(f"Restore backup result: {restore_result}")
 
 
 if len(sys.argv) > 1:
@@ -33,19 +38,22 @@ settings = dotenv_values(settings_path)
 logger = log.setup_custom_logger('root', settings.get("log_method", "file"),
                                  settings.get("log_level", "info"),
                                  graylog_host=settings.get("graylog_server"),
-                                 graylog_port=int(settings.get("graylog_port")))
+                                 graylog_port=int(settings.get("graylog_port")),
+                                 log_dir=settings.get("log_file_path"))
 sys.excepthook = handle_unhandled_exception
 
 
 def cache_to_db():
     logger.info("cache_to_db started.")
+    connection_string = settings.get("db_connection_string")
+    rescue_path = settings.get("backup_path")
+    if rescue_path:
+        backup_database(connection_string, rescue_path)
 
     wowi_host = settings.get("wowi_host")
     wowi_user = settings.get("wowi_user")
     wowi_pass = settings.get("wowi_pass")
     wowi_key = settings.get("wowi_key")
-
-    connection_string = settings.get("db_connection_string")
 
     str_en_buildings = settings.get("enable_buildings")
     str_en_contractors = settings.get("enable_contractors")
