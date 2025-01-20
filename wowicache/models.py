@@ -1,8 +1,9 @@
-from sqlalchemy import Column, String, Integer, ForeignKey, Date, Float, Boolean
+from sqlalchemy import Column, String, Integer, ForeignKey, Date, Float, Boolean, Numeric
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from datetime import datetime
 
 Base = declarative_base()
 
@@ -394,3 +395,71 @@ class Contractor(Base):
 
     def __repr__(self):
         return f"Contractor {self.internal_id}"
+
+
+class Membership(Base):
+    __tablename__ = "wowi_memberships"
+    internal_id = Column("internal_id", Integer, primary_key=True)
+    id_num = Column("id_num", String(30))
+    creation_date = Column("creation_date", Date)
+    valid_from = Column("valid_from", Date)
+    valid_to = Column("valid_to", Date, nullable=True)
+    is_payout_block_account = Column("is_payout_block_account", Boolean)
+    cooperative_account_clearing_lock = Column("cooperative_account_clearing_lock", Boolean)
+    subsidy_application_for_several_fiscal_years_allowed = Column(
+        "subsidy_application_for_several_fiscal_years_allowed", Boolean)
+    no_participation_electoral_district = Column("no_participation_electoral_district", Boolean)
+    active_amount_sum = Column("active_amount_sum", Numeric)
+    active_count_sum = Column("active_count_sum", Numeric)
+    membership_status_id = Column("membership_status_id", Integer)
+    membership_status_code = Column("membership_status_code", String(30))
+    electoral_district_id = Column("electoral_district_id", Integer, nullable=True)
+    electoral_district_code = Column("electoral_district_code", String(30), nullable=True)
+    membership_end_reason_id = Column("membership_end_reason_id", Integer, nullable=True)
+    membership_end_reason_code = Column("membership_end_reason_code", String(30), nullable=True)
+    description = Column("description", String(30), nullable=True)
+    active_main_member_person_id = Column("active_main_member_person_id", Integer, nullable=True)
+    active_main_member_person_id_num = Column("active_main_member_person_id_num", String(30), nullable=True)
+
+    def __init__(self, **kwargs):
+        self.internal_id = kwargs.get("id")
+        self.id_num = kwargs.get("id_num")
+        t_creation_date = kwargs.get("creation_date")
+        if isinstance(t_creation_date, str):
+            t_creation_date = datetime.strptime(t_creation_date, "%Y-%m-%d")
+        self.creation_date = t_creation_date
+
+        t_valid_from = kwargs.get("valid_from")
+        if isinstance(t_valid_from, str):
+            t_valid_from = datetime.strptime(t_valid_from, "%Y-%m-%d")
+        self.valid_from = t_valid_from
+
+        t_valid_to = kwargs.get("valid_to")
+        if isinstance(t_valid_to, str):
+            t_valid_to = datetime.strptime(t_valid_to, "%Y-%m-%d")
+        self.valid_to = t_valid_to
+
+        self.is_payout_block_account = kwargs.get("is_payout_block_account")
+        self.cooperative_account_clearing_lock = kwargs.get("cooperative_account_clearing_lock")
+        self.subsidy_application_for_several_fiscal_years_allowed = kwargs.get(
+            "subsidy_application_for_several_fiscal_years_allowed")
+        self.no_participation_electoral_district = kwargs.get("no_participation_electoral_district")
+        self.active_amount_sum = kwargs.get("active_amount_sum")
+        self.active_count_sum = kwargs.get("active_count_sum")
+        self.membership_status_id = kwargs.get("membership_status_id")
+        self.membership_status_code = kwargs.get("membership_status_code")
+        self.electoral_district_id = kwargs.get("electoral_district_id")
+        self.electoral_district_code = kwargs.get("electoral_district_code")
+        self.membership_end_reason_id = kwargs.get("membership_end_reason_id")
+        self.membership_end_reason_code = kwargs.get("membership_end_reason_code")
+        self.description = kwargs.get("description")
+        self.active_main_member_person_id = kwargs.get("active_main_member_person_id")
+        self.active_main_member_person_id_num = kwargs.get("active_main_member_person_id_num")
+
+    def __repr__(self):
+        return f"Membership {self.id_num}"
+
+
+
+
+

@@ -7,7 +7,7 @@ import sqlalchemy.exc
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from wowicache.models import Base, EconomicUnit, District, Building, UseUnit, Address, Communication, Person, Contract
-from wowicache.models import Contractor
+from wowicache.models import Contractor, Membership
 from wowicache.rescue import backup_database, restore_last_backup
 from datetime import datetime
 
@@ -17,6 +17,7 @@ ENPERSONS = 3
 ENECONOMICUNITS = 4
 ENCONTRACTS = 5
 ENUSEUNITS = 6
+ENMEMBERSHIPS = 7
 
 
 def handle_unhandled_exception(exc_type, exc_value, exc_traceback):
@@ -38,7 +39,7 @@ settings = dotenv_values(settings_path)
 logger = log.setup_custom_logger('root', settings.get("log_method", "file"),
                                  settings.get("log_level", "info"),
                                  graylog_host=settings.get("graylog_server"),
-                                 graylog_port=int(settings.get("graylog_port")),
+                                 graylog_port=int(settings.get("graylog_port", 0)),
                                  log_dir=settings.get("log_file_path"))
 sys.excepthook = handle_unhandled_exception
 
@@ -61,6 +62,7 @@ def cache_to_db():
     str_en_economic_units = settings.get("enable_economic_units")
     str_en_license_agreements = settings.get("enable_license_agreements")
     str_en_use_units = settings.get("enable_use_units")
+    str_en_memberships = settings.get("enable_memberships")
 
     user_agent = settings.get("user_agent")
     if user_agent is None or len(user_agent.strip()) == 0:
@@ -79,6 +81,8 @@ def cache_to_db():
         entities.append(ENCONTRACTS)
     if str_en_use_units is not None and str_en_use_units.lower() == "true":
         entities.append(ENUSEUNITS)
+    if str_en_memberships is not None and str_en_memberships.lower() == "true":
+        entities.append(ENMEMBERSHIPS)
 
     logger.info(f"Entities activated: {entities}")
 
@@ -100,6 +104,7 @@ def cache_to_db():
     session.query(Building).delete()
     session.query(EconomicUnit).delete()
     session.query(District).delete()
+    session.query(Membership).delete()
     session.commit()
 
     if ENECONOMICUNITS in entities or ENBUILDINGS in entities:
@@ -379,6 +384,41 @@ def cache_to_db():
                 session.rollback()
 
         logger.info(f"Added {sectioncount} contractors.")
+
+    if ENMEMBERSHIPS in entities:
+        sectioncount = 0
+        memberships = wowicon.get_memberships(fetch_all=True)
+        for entry in memberships:
+            new_entry = Membership(internal_id=entry.id_,
+                                   id_num=entry.id_num,
+                                   creation_date=entry.creation_date,
+                                   valid_from=entry.valid_from,
+                                   valid_to=entry.valid_to,
+                                   is_payout_block_account=entry.is_payout_block_account,
+                                   cooperative_account_clearing_lock=entry.cooperative_account_clearing_lock,
+                                   subsidy_application_for_several_fiscal_years_allowed=entry.
+                                   subsidy_application_for_several_fiscal_years_allowed,
+                                   no_participation_electoral_district=entry.no_participation_electoral_district,
+                                   active_amount_sum=entry.active_amount_sum,
+                                   active_count_sum=entry.active_count_sum,
+                                   membership_status_id=entry.membership_status_id,
+                                   membership_status_code=entry.membership_status_code,
+                                   electoral_district_id=entry.electoral_district_id,
+                                   electoral_district_code=entry.electoral_district_code,
+                                   membership_end_reason_id=entry.membership_end_reason_id,
+                                   membership_end_reason_code=entry.membership_end_reason_code,
+                                   description=entry.description,
+                                   active_main_member_person_id=entry.active_main_member_person_id,
+                                   active_main_member_person_id_num=entry.active_main_member_person_id_num)
+            try:
+                session.add(new_entry)
+                session.commit()
+                sectioncount += 1
+            except sqlalchemy.exc.IntegrityError:
+                logger.warning(f"Rolling back membership")
+                session.rollback()
+
+        logger.info(f"Added {sectioncount} memberships.")
 
     session.close()
     logger.info("Cache update complete.")
