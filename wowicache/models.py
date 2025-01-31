@@ -458,8 +458,3 @@ class Membership(Base):
 
     def __repr__(self):
         return f"Membership {self.id_num}"
-
-
-
-
-
