@@ -249,7 +249,6 @@ def cache_to_db():
                 if entry.natural_person.birth_date else None
             gender_id = entry.natural_person.gender.id_ if entry.natural_person.gender else None
             gender_name = entry.natural_person.gender.name if entry.natural_person.gender else None
-
             new_person = Person(internal_id=entry.id_,
                                 id_num=entry.id_num,
                                 name=entry.name,
@@ -265,7 +264,9 @@ def cache_to_db():
                                 last_name=entry.natural_person.last_name,
                                 birth_date=birth_date,
                                 gender_id=gender_id,
-                                gender_name=gender_name)
+                                gender_name=gender_name,
+                                death_date=entry.natural_person.death_date,
+                                title=entry.natural_person.title)
             session.add(new_person)
             sectioncount += 1
 

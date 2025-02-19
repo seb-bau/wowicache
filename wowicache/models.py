@@ -294,6 +294,8 @@ class Person(Base):
     first_name = Column("first_name", String(60), nullable=True)
     last_name = Column("last_name", String(60), nullable=True)
     birth_date = Column("birth_date", Date, nullable=True)
+    death_date = Column("death_date", Date, nullable=True)
+    title = Column("title", String(100), nullable=True)
     gender_id = Column("gender_id", Integer, nullable=True)
     gender_name = Column("gender_name", String(30), nullable=True)
     is_natural_person = Column("is_natural_person", Boolean)
@@ -304,7 +306,7 @@ class Person(Base):
 
     def __init__(self, internal_id, id_num, name, short_name, valid_from, valid_to, long_name_1, long_name_2,
                  vat_id, commercial_register_number, commercial_register_town, first_name, last_name, birth_date,
-                 gender_id, gender_name):
+                 gender_id, gender_name, death_date, title):
         self.internal_id = internal_id
         self.id_num = id_num
         self.name = name
@@ -321,6 +323,8 @@ class Person(Base):
         self.birth_date = birth_date
         self.gender_id = gender_id
         self.gender_name = gender_name
+        self.death_date = death_date
+        self.title = title
 
         if self.first_name is None and self.last_name is None:
             self.is_natural_person = False
