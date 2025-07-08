@@ -7,7 +7,7 @@ import sqlalchemy.exc
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from wowicache.models import Base, EconomicUnit, District, Building, UseUnit, Address, Communication, Person, Contract
-from wowicache.models import Contractor, Membership
+from wowicache.models import Contractor, Membership, PaymentMode
 from wowicache.rescue import backup_database, restore_last_backup
 from datetime import datetime
 
@@ -18,6 +18,7 @@ ENECONOMICUNITS = 4
 ENCONTRACTS = 5
 ENUSEUNITS = 6
 ENMEMBERSHIPS = 7
+ENPAYMENTMODES = 8
 
 
 def handle_unhandled_exception(exc_type, exc_value, exc_traceback):
@@ -63,6 +64,7 @@ def cache_to_db():
     str_en_license_agreements = settings.get("enable_license_agreements")
     str_en_use_units = settings.get("enable_use_units")
     str_en_memberships = settings.get("enable_memberships")
+    str_en_payment_modes = settings.get("enable_payment_modes")
 
     user_agent = settings.get("user_agent")
     if user_agent is None or len(user_agent.strip()) == 0:
@@ -83,6 +85,8 @@ def cache_to_db():
         entities.append(ENUSEUNITS)
     if str_en_memberships is not None and str_en_memberships.lower() == "true":
         entities.append(ENMEMBERSHIPS)
+    if str_en_payment_modes is not None and str_en_payment_modes.lower() == "true":
+        entities.append(ENPAYMENTMODES)
 
     logger.info(f"Entities activated: {entities}")
 
@@ -105,6 +109,7 @@ def cache_to_db():
     session.query(EconomicUnit).delete()
     session.query(District).delete()
     session.query(Membership).delete()
+    session.query(PaymentMode).delete()
     session.commit()
 
     if ENECONOMICUNITS in entities or ENBUILDINGS in entities:
@@ -420,6 +425,36 @@ def cache_to_db():
                 session.rollback()
 
         logger.info(f"Added {sectioncount} memberships.")
+
+    if ENPAYMENTMODES in entities:
+        sectioncount = 0
+        payment_modes = wowicon.get_payment_modes(fetch_all=True, license_agreement_active_on=datetime.now(),
+                                                  payment_mode_active_on=datetime.now())
+        for entry in payment_modes:
+            new_entry = PaymentMode(internal_id=entry.id_,
+                                    contract_id=entry.license_agreement.id_,
+                                    active_from=entry.active_from,
+                                    active_to=entry.active_to,
+                                    mode_id=entry.mode_id,
+                                    mode_name=entry.mode_name,
+                                    type_id=entry.type_id,
+                                    type_name=entry.type_name,
+                                    sepa_id=entry.sepa_id,
+                                    sepa_iban=entry.sepa_iban,
+                                    sepa_mandate_id=entry.sepa_mandate_id,
+                                    bank_account_id=entry.bank_account_id,
+                                    bank_account_bix=entry.bank_account_bic,
+                                    bank_account_iban=entry.bank_account_iban
+                                    )
+            try:
+                session.add(new_entry)
+                session.commit()
+                sectioncount += 1
+            except sqlalchemy.exc.IntegrityError:
+                logger.warning(f"Rolling back payment_mode")
+                session.rollback()
+
+        logger.info(f"Added {sectioncount} payment_modes.")
 
     session.close()
     logger.info("Cache update complete.")

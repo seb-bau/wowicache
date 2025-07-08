@@ -351,6 +351,7 @@ class Contract(Base):
     contract_start = Column("contract_start", Date)
     contract_end = Column("contract_end", Date, nullable=True)
     contractors = relationship('Contractor', back_populates='contract')
+    payment_modes = relationship('PaymentMode', back_populates='contract')
 
     def __init__(self, internal_id, id_num, use_unit_id, restriction_id, restriction_name, is_vacancy,
                  status_id, status_name, life_id, life_name, contract_start, contract_end):
@@ -462,3 +463,51 @@ class Membership(Base):
 
     def __repr__(self):
         return f"Membership {self.id_num}"
+
+
+class PaymentMode(Base):
+    __tablename__ = "wowi_payment_modes"
+    internal_id = Column("internal_id", Integer, primary_key=True)
+    contract_id = Column(Integer, ForeignKey("wowi_contracts.internal_id"), primary_key=True)
+    contract = relationship('Contract', back_populates='payment_modes')
+    active_from = Column("active_from", Date)
+    active_to = Column("active_to", Date, nullable=True)
+    mode_id = Column("mode_id", Integer)
+    mode_name = Column("mode_name", String(100))
+    type_id = Column("type_id", Integer)
+    type_name = Column("type_name", String(100))
+    sepa_id = Column("sepa_id", Integer)
+    sepa_mandate_id = Column("sepa_mandate_id", String(100))
+    sepa_iban = Column("sepa_iban", String(100))
+    bank_account_id = Column("bank_account_id", Integer)
+    bank_account_bic = Column("bank_account_bic", String(100))
+    bank_account_iban = Column("bank_account_iban", String(100))
+
+    def __init__(self, **kwargs):
+        self.internal_id = kwargs.get("internal_id")
+        self.contract_id = kwargs.get("contract_id")
+
+        t_active_from = kwargs.get("active_from")
+        if isinstance(t_active_from, str):
+            t_active_from = datetime.strptime(t_active_from, "%Y-%m-%d")
+        self.active_from = t_active_from
+
+        t_active_to = kwargs.get("active_to")
+        if isinstance(t_active_to, str):
+            t_active_to = datetime.strptime(t_active_to, "%Y-%m-%d")
+        self.active_to = t_active_to
+
+        self.mode_id = kwargs.get("mode_id")
+        self.mode_name = kwargs.get("mode_name")
+        self.type_id = kwargs.get("type_id")
+        self.type_name = kwargs.get("type_name")
+
+        self.sepa_id = kwargs.get("sepa_id")
+        self.sepa_mandate_id = kwargs.get("sepa_mandate_id")
+        self.sepa_iban = kwargs.get("sepa_iban")
+
+        self.bank_account_id = kwargs.get("bank_account_id")
+        self.bank_account_bic = kwargs.get("bank_account_bic")
+        self.bank_account_iban = kwargs.get("bank_account_iban")
+
+
