@@ -443,7 +443,7 @@ def cache_to_db():
                                     sepa_iban=entry.sepa_iban,
                                     sepa_mandate_id=entry.sepa_mandate_id,
                                     bank_account_id=entry.bank_account_id,
-                                    bank_account_bix=entry.bank_account_bic,
+                                    bank_account_bic=entry.bank_account_bic,
                                     bank_account_iban=entry.bank_account_iban
                                     )
             try:
