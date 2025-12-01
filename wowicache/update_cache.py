@@ -2,6 +2,7 @@ import sys
 import os
 from dotenv import dotenv_values
 from wowipy.wowipy import WowiPy
+from wowipy.models import Banking, CollectiveAccount
 from wowicache import log
 import sqlalchemy.exc
 from sqlalchemy import create_engine
@@ -338,6 +339,18 @@ def cache_to_db():
                 if entry.start_contract else None
             contract_end = datetime.strptime(str(entry.end_of_contract), "%Y-%m-%d  %H:%M:%S") \
                 if entry.end_of_contract else None
+
+            banking: Banking
+            banking = entry.banking
+            virtual_iban = None
+            virtual_bic = None
+            if banking:
+                virtual_iban = banking.virtual_iban
+                coll_acc: CollectiveAccount
+                coll_acc = banking.collective_account
+                if coll_acc:
+                    virtual_bic = coll_acc.bic
+
             new_entry = Contract(internal_id=entry.id_,
                                  id_num=entry.id_num,
                                  use_unit_id=entry.use_unit.id_,
@@ -349,7 +362,9 @@ def cache_to_db():
                                  life_id=entry.life_of_contract.id_,
                                  life_name=entry.life_of_contract.name,
                                  contract_start=contract_start,
-                                 contract_end=contract_end)
+                                 contract_end=contract_end,
+                                 virtual_iban=virtual_iban,
+                                 virtual_bic=virtual_bic)
             session.add(new_entry)
             sectioncount += 1
         session.commit()

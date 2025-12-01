@@ -349,11 +349,14 @@ class Contract(Base):
     life_name = Column("life_name", String(50))
     contract_start = Column("contract_start", Date)
     contract_end = Column("contract_end", Date, nullable=True)
+    virtual_iban = Column("virtual_iban", String(50), nullable=True)
+    virtual_bic = Column("virtual_bic", String(50), nullable=True)
     contractors = relationship('Contractor', back_populates='contract')
     payment_modes = relationship('PaymentMode', back_populates='contract')
 
     def __init__(self, internal_id, id_num, use_unit_id, restriction_id, restriction_name, is_vacancy,
-                 status_id, status_name, life_id, life_name, contract_start, contract_end):
+                 status_id, status_name, life_id, life_name, contract_start, contract_end, virtual_iban=None,
+                 virtual_bic=None):
         self.internal_id = internal_id
         self.id_num = id_num
         self.use_unit_id = use_unit_id
@@ -366,6 +369,8 @@ class Contract(Base):
         self.life_name = life_name
         self.contract_start = contract_start
         self.contract_end = contract_end
+        self.virtual_bic = virtual_bic
+        self.virtual_iban = virtual_iban
 
     def __repr__(self):
         return f"Contract IdNum {self.id_num} Id {self.internal_id}"
